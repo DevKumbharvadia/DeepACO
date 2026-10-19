@@ -201,7 +201,7 @@ class ACO():
 
 
 if __name__=="__main__":
-    from utils import gen_instance
+    from bpp.utils import gen_instance
     n=120
     demands = gen_instance(n, 'cpu')
     aco = ACO(
