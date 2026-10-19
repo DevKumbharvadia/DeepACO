@@ -30,29 +30,20 @@ If you are currently in the parent directory containing `bpp`, run:
 
 ```powershell
 cd .\bpp
-```
 
-Create and activate the virtual environment:
-
-```powershell
 py -3.8 -m venv .venv-deepaco
 .\.venv-deepaco\Scripts\Activate.ps1
-```
 
-Upgrade pip and install the dependencies:
-
-```powershell
 python -m pip install --upgrade "pip<25.1"
 python -m pip install numpy==1.24.4
-python -m pip install torch
-python -m pip install scipy networkx matplotlib tqdm numba torch-geometric pandas
+python -m pip install scipy networkx matplotlib tqdm numba pandas
 ```
 
 Verify the installation:
 
 ```powershell
 python --version
-python -c "import torch, torch_geometric, numpy, pandas; print('Dependencies OK')"
+python -c "import numpy, torch, scipy, networkx, matplotlib, tqdm, numba, pandas, torch_geometric; print('All dependencies imported successfully')"
 ```
 
 If PowerShell blocks environment activation, run:
