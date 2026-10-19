@@ -3,6 +3,7 @@ import sys
 import csv
 import time
 import traceback
+import torch
 from datetime import datetime
 from pathlib import Path
 from contextlib import redirect_stdout, redirect_stderr
@@ -156,7 +157,17 @@ def run_experiment(csv_path):
 
     dataset = load_test_dataset(PROBLEM_SIZE, "cpu")
 
-    if not dataset:
+    if dataset is None:
+        raise ValueError(
+            f"The test dataset for size {PROBLEM_SIZE} is missing."
+        )
+
+    if isinstance(dataset, torch.Tensor) and dataset.numel() == 0:
+        raise ValueError(
+            f"The test dataset for size {PROBLEM_SIZE} is empty."
+        )
+
+    if isinstance(dataset, (list, tuple, dict, str)) and len(dataset) == 0:
         raise ValueError(
             f"The test dataset for size {PROBLEM_SIZE} is empty."
         )

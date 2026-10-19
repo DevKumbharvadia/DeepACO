@@ -4,3 +4,5 @@ exp*
 .vscode
 data/*
 .DS_Store
+.venv-deepaco/
+logs/

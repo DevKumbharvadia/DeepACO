@@ -261,6 +261,8 @@ def warmup_model_and_aco(net):
     with torch.no_grad():
         graph = gen_pyg_data(warmup_demand, DEVICE)
 
+        graph.x = graph.x.float()
+
         heuristic = (
             net(graph).reshape(
                 len(warmup_demand),

@@ -132,6 +132,8 @@ def main():
 
                 graph = gen_pyg_data(demand, DEVICE)
 
+                graph.x = graph.x.float()
+
                 heuristic = (
                     net(graph).reshape(
                         N_NODE + 1,
