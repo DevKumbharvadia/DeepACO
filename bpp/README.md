@@ -7,7 +7,7 @@ DeepACO addresses the **Bin Packing Problem (BPP)**: packing items into fixed-ca
 The project combines:
 
 - **Graph Neural Network (GNN):** Provides learned guidance for item placement.
-- **Ant Colony Optimization (ACO):** Searches for good packing solutions using model-guided decisions.
+- **Ant Colony Optimization (ACO):** Searches for high-quality packing solutions using model-guided decisions.
 - **Classical heuristics:** First Fit (FF), First Fit Decreasing (FFD), and Best Fit Decreasing (BFD) provide comparison baselines.
 - **Local Search:** Attempts to improve DeepACO solutions through item moves, swaps, and bin elimination.
 
@@ -17,33 +17,34 @@ The project evaluates solution quality, unused capacity, runtime, solution valid
 
 - Windows 10 or Windows 11
 - Python 3.8
+- PowerShell
+- A compatible PyTorch and PyTorch Geometric installation
 - Pretrained checkpoint: `../pretrained/bpp/bpp120.pt`
 - Test dataset: `../data/bpp/testDataset-120.pt`
 
-Run commands from the `bpp` project directory.
+Run commands from the `bpp` project directory unless otherwise specified.
+
+The checkpoint and dataset paths are relative to the project directory. The checkpoint must be available before running experiments that require the pretrained model.
 
 ## Installation
 
-Open PowerShell in the project directory.
+### 1. Open PowerShell
 
-If you are currently in the parent directory containing `bpp`, run:
+Navigate to the directory containing the `bpp` project folder.
+
+If you are already in the parent directory, run:
 
 ```powershell
 cd .\bpp
-
-py -3.8 -m venv .venv-deepaco
-.\.venv-deepaco\Scripts\Activate.ps1
-
-python -m pip install --upgrade "pip<25.1"
-python -m pip install numpy==1.24.4
-python -m pip install scipy networkx matplotlib tqdm numba pandas
 ```
 
-Verify the installation:
+If you are already inside `bpp`, do not run this command again.
+
+### 2. Create and activate a virtual environment
 
 ```powershell
-python --version
-python -c "import numpy, torch, scipy, networkx, matplotlib, tqdm, numba, pandas, torch_geometric; print('All dependencies imported successfully')"
+py -3.8 -m venv .venv-deepaco
+.\.venv-deepaco\Scripts\Activate.ps1
 ```
 
 If PowerShell blocks environment activation, run:
@@ -53,11 +54,52 @@ Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass
 .\.venv-deepaco\Scripts\Activate.ps1
 ```
 
-Then activate the environment again.
+This policy change applies only to the current PowerShell session.
 
-> **Compatibility note:** The commands above install the standard packages, but the appropriate PyTorch and PyTorch Geometric versions can depend on your Python version, operating system, and CPU/GPU configuration. If installation fails, check the compatible versions before changing the environment.
+### 3. Install the dependencies
+
+Upgrade pip and install NumPy and the general-purpose dependencies:
+
+```powershell
+python -m pip install --upgrade "pip<25.1"
+python -m pip install numpy==1.24.4
+python -m pip install scipy networkx matplotlib tqdm numba pandas
+```
+
+Install PyTorch using a release compatible with Python 3.8 and your machine. Then install a compatible PyTorch Geometric release.
+
+Do not assume that installing the latest available releases of PyTorch and PyTorch Geometric will work with Python 3.8. Check the official installation instructions and compatibility requirements:
+
+- PyTorch: https://pytorch.org/get-started/previous-versions/
+- PyTorch Geometric: https://pytorch-geometric.readthedocs.io/
+
+The correct versions depend on the Python version, operating system, PyTorch release, and CPU/GPU configuration.
+
+### 4. Verify the installation
+
+Check the Python version:
+
+```powershell
+python --version
+```
+
+Check that the required packages can be imported:
+
+```powershell
+python -c "import numpy, torch, scipy, networkx, matplotlib, tqdm, numba, torch_geometric, pandas; print('All dependencies imported successfully')"
+```
+
+Check the installed PyTorch version and device availability:
+
+```powershell
+python -c "import torch; print('PyTorch:', torch.__version__); print('CUDA available:', torch.cuda.is_available())"
+```
+
+A successful import check confirms that the listed packages are importable. It does not guarantee that every experiment will run successfully.
 
 ## How It Works
+
+The project workflow consists of the following stages:
 
 1. Load the pretrained GNN checkpoint and test dataset.
 2. Construct bin-packing solutions using GNN-guided ACO.
@@ -67,9 +109,11 @@ Then activate the environment again.
 6. Run scalability experiments across multiple item counts.
 7. Analyze experiment results and generate CSV summaries and plots.
 
+The objective is to reduce the number of bins while maintaining valid item assignments and respecting bin-capacity constraints.
+
 ## Run the Project
 
-### Recommended: Run the complete workflow
+### Run the complete workflow
 
 From the `bpp` directory, execute:
 
@@ -77,11 +121,11 @@ From the `bpp` directory, execute:
 python .\run_project.py
 ```
 
-The master runner coordinates the following stages:
+The master runner is intended to coordinate these stages:
 
 1. Classical baselines — `test_classical.py`
 2. Original DeepACO baseline — `test.py`
-3. DeepACO + Local Search — `test_deepaco_local_search.py`
+3. DeepACO with Local Search — `test_deepaco_local_search.py`
 4. Scalability experiments — `test_scalability.py`
 5. Final results analysis — `analyze_results.py`
 
@@ -91,17 +135,19 @@ The default scalability configuration uses seven item counts:
 
 With 20 instances per size, this corresponds to **140 scalability instances**.
 
-The runner records each stage's status and runtime, continues to later stages if an individual test fails, and attempts final analysis after the experiment stages. A final summary reports passed, failed, skipped, and interrupted stages.
+The runner is designed to record stage status and runtime, continue to subsequent stages after individual experiment failures, and attempt final analysis. The final summary is intended to report passed, failed, skipped, and interrupted stages.
 
-A full run can take considerable time. Experiment scripts may create new timestamped output files under `logs/`.
+A full run can take considerable time. Experiment scripts may generate new timestamped output files under `logs/`.
 
 ### Run scalability experiments only
+
+Run scalability experiments using the default configuration:
 
 ```powershell
 python .\run_project.py --scalability-only
 ```
 
-Run all seven default sizes with 50 instances per size:
+Run all seven sizes with 50 instances per size:
 
 ```powershell
 python .\run_project.py --scalability-only --sizes 60 90 120 150 180 210 240 --instances 50
@@ -113,11 +159,13 @@ Run a smaller scalability test:
 python .\run_project.py --scalability-only --sizes 60 120 240 --instances 10
 ```
 
-The `--seed` argument controls the seed passed to the scalability script:
+Specify the random seed:
 
 ```powershell
 python .\run_project.py --scalability-only --seed 20261017
 ```
+
+These commands assume `run_project.py` accepts and forwards the specified arguments to `test_scalability.py`.
 
 ### Analyze existing results only
 
@@ -125,7 +173,9 @@ python .\run_project.py --scalability-only --seed 20261017
 python .\run_project.py --analysis-only
 ```
 
-This runs `analyze_results.py` without rerunning the experiment stages. The analysis script must be able to locate the existing result files to produce meaningful reports.
+This option is intended to run `analyze_results.py` without rerunning the experiment stages.
+
+The analysis script must be able to locate the existing result files and recognize their expected formats. If those files are missing, the analysis may fail or produce incomplete output.
 
 ### Skip selected stages
 
@@ -153,11 +203,11 @@ Skip scalability experiments:
 python .\run_project.py --skip-scalability
 ```
 
-Multiple skip options can be combined.
+Multiple skip options can be combined. These options assume that the corresponding arguments are implemented by the master runner.
 
 ### Run individual scripts
 
-You can also execute stages independently:
+You can execute individual stages directly:
 
 ```powershell
 python .\test_classical.py
@@ -167,13 +217,13 @@ python .\test_scalability.py
 python .\analyze_results.py
 ```
 
-Use the individual scripts when you want to run a specific experiment or debug a stage.
+Use individual scripts when debugging a particular experiment or when you do not need the complete workflow.
 
 ## Project Files
 
-| File | Purpose |
+| File or directory | Purpose |
 |---|---|
-| `run_project.py` | Coordinates experiment stages and produces a final execution summary |
+| `run_project.py` | Coordinates experiment stages and reports execution status |
 | `net.py` | Graph Neural Network model |
 | `aco.py` | Ant Colony Optimization implementation |
 | `bfd.py` | Best Fit Decreasing heuristic |
@@ -191,9 +241,11 @@ Keep the existing file structure unchanged unless a deliberate project refactor 
 
 ## Results and Evaluation
 
-The completed experiments evaluated five methods across seven item counts, with 20 instances per size, for a total of **140 scalability instances**.
+The completed experiment run evaluated five methods across seven item counts, using 20 instances per size, for a total of **140 scalability instances**.
 
 ### DeepACO vs. DeepACO + Local Search
+
+The recorded paired comparison reported the following results:
 
 | Metric | Result |
 |---|---:|
@@ -202,9 +254,11 @@ The completed experiments evaluated five methods across seven item counts, with 
 | Worsened instances | 0 |
 | Total bins saved | 33 |
 
-These results reflect the completed experiment run and its tested instances. They do not guarantee the same performance on other datasets, random seeds, or problem sizes.
+These results describe the recorded experiment and its tested instances. They do not guarantee identical performance on different datasets, random seeds, problem sizes, or algorithm settings.
 
-Classical heuristics were substantially faster in the completed experiments. Runtime and solution quality should therefore be considered together when comparing the methods.
+Classical heuristics were substantially faster in the completed experiments. Solution quality and runtime should therefore be considered together when comparing the methods.
+
+Retain the experiment CSV files and logs that support these reported values so the results can be reproduced and verified.
 
 ### Analysis outputs
 
@@ -212,7 +266,7 @@ The final analysis directory is:
 
 `logs/final_scalability_analysis/`
 
-It contains the generated analysis artifacts, including available CSV summaries and plots for:
+The analysis workflow is intended to produce available CSV summaries and plots covering:
 
 - Average bins used
 - Average runtime
@@ -220,40 +274,57 @@ It contains the generated analysis artifacts, including available CSV summaries 
 - DeepACO versus Local Search
 - Per-instance Local Search improvements
 
-The exact files produced depend on the analysis script and the experiment outputs available when it runs.
+The exact output files depend on the implementation of `analyze_results.py` and the experiment results available when it runs.
 
 ## Logging and Reproducibility
 
-The master runner creates a timestamped log under:
+The master runner is intended to create a timestamped log under:
 
 `logs/master_run_TIMESTAMP.log`
 
-This log records the master workflow's output, stage execution details, and final summary.
-
-Individual experiment scripts may also create their own logs, CSV files, and plots under `logs/`.
+The log records workflow output, stage execution details, and the final execution summary. Individual experiment scripts may also create their own logs, CSV files, and plots under `logs/`.
 
 For reproducible comparisons:
 
 - Record the problem sizes, instance count, random seed, and algorithm parameters.
-- Preserve the experiment CSV files and logs.
+- Preserve experiment CSV files, logs, and relevant checkpoints.
 - Compare algorithms using the same test instances wherever possible.
 - Distinguish total runtime from average runtime per instance.
-- Verify that all items are assigned exactly once and no bin exceeds its capacity.
-- Inspect existing experiment outputs before rerunning tests if you need to preserve a particular result set.
+- Validate solutions before comparing their bin counts.
+- Inspect existing outputs before rerunning experiments if previous results must be preserved.
+- Record dependency versions and the machine configuration used for the experiments.
+
+A random seed improves reproducibility only when the scripts correctly apply it to all relevant random-number generators and other sources of nondeterminism.
 
 ## Data and Checkpoint Safety
 
-The master runner expects the checkpoint and dataset at the paths documented above.
+The master runner expects the following files:
 
-Before running experiments, verify that both files exist. The runner's preflight check reports missing files, but individual experiments may still fail if their required assets are unavailable.
+- Pretrained checkpoint: `../pretrained/bpp/bpp120.pt`
+- Test dataset: `../data/bpp/testDataset-120.pt`
 
-**Data generation is opt-in.** The `--generate-data` option executes `utils.py` before the experiments:
+The pretrained checkpoint must already exist before running experiments that require the trained model. Generating a test dataset does not generate a pretrained checkpoint.
+
+### First-run dataset generation
+
+The intended behavior is:
+
+- **Dataset missing:** Run `utils.py` to generate the expected dataset.
+- **Dataset already exists:** Reuse the existing dataset without regenerating it.
+- **Dataset generation fails:** Stop before running experiments that require the missing dataset.
+- **Checkpoint missing:** Report the missing checkpoint; do not attempt to generate one automatically.
+
+This behavior must be implemented in `run_project.py`. The README does not implement dataset generation by itself.
+
+Before relying on automatic generation, inspect `utils.py` to confirm that it writes the dataset to the expected path and determine whether it can overwrite other files.
+
+If your current runner still uses opt-in generation, the following command may be supported by that version:
 
 ```powershell
 python .\run_project.py --generate-data
 ```
 
-Inspect `utils.py` first to understand which files it writes. Do not use this option if you need to preserve existing datasets without confirming that the script will not overwrite them.
+Use this option only if it is implemented by the current runner, and inspect `utils.py` first to understand its effects on existing data.
 
 ## Validation
 
@@ -264,31 +335,66 @@ A valid bin-packing solution must satisfy both conditions:
 
 Performance comparisons should use validated solutions so that a lower bin count is not accepted at the expense of correctness.
 
+For reliable evaluation, validate the solutions produced by every compared algorithm, not only the proposed DeepACO method.
+
 ## Troubleshooting
 
-**Missing Python dependencies**
+### Missing Python dependencies
 
-Activate `.venv-deepaco` and install the missing packages in that environment.
+Activate the virtual environment:
 
-**Checkpoint or dataset not found**
+```powershell
+.\.venv-deepaco\Scripts\Activate.ps1
+```
 
-Verify the relative locations of `pretrained/bpp/bpp120.pt` and `data/bpp/testDataset-120.pt` relative to the project directory.
+Install any missing packages into that environment and repeat the import checks.
 
-**A test stage fails**
+### PyTorch or PyTorch Geometric installation fails
 
-Review the error details in the terminal and the timestamped master log under `logs/`. The master runner continues with subsequent stages when an individual experiment fails.
+Confirm that the selected versions support Python 3.8 and are compatible with one another. Follow the official installation instructions rather than repeatedly installing arbitrary versions.
 
-**No new analysis plots appear**
+### Checkpoint or dataset not found
 
-Confirm that the experiment scripts completed successfully and that `analyze_results.py` can find the CSV files it expects.
+Verify the paths relative to the `bpp` directory:
 
-**Scalability takes too long**
+- `..\pretrained\bpp\bpp120.pt`
+- `..\data\bpp\testDataset-120.pt`
 
-Reduce the number of instances or run fewer problem sizes during debugging. Use the full configuration for the final experiment run.
+If the dataset is missing, verify the dataset-generation logic and its output path. If the checkpoint is missing, restore the correct pretrained checkpoint.
 
----
+### A test stage fails
 
-**Project:** DeepACO — Optimized Bin Packing Using Adaptive Item Ordering  
-**Language:** Python 3.8  
-**Platform:** Windows 10/11, PowerShell  
-**Primary objective:** Minimize the number of bins while maintaining valid item assignments and capacity constraints.
+Review the error details in the terminal and the timestamped master log under `logs/`. Check the individual script's inputs, dependencies, and command-line arguments.
+
+The master runner can continue after a stage failure only if its implementation explicitly supports that behavior.
+
+### No new analysis plots appear
+
+Confirm that the experiment scripts completed successfully, that the expected CSV files exist, and that `analyze_results.py` can locate and process them.
+
+### Scalability takes too long
+
+Reduce the number of instances or test fewer problem sizes while debugging. Use the intended full configuration for the final experiment run.
+
+### PowerShell cannot find Python
+
+Check the Python launcher:
+
+```powershell
+py -0p
+```
+
+Confirm that Python 3.8 is installed and that the virtual environment is active. Then run:
+
+```powershell
+python --version
+python -m pip --version
+```
+
+## Project Summary
+
+- **Project:** DeepACO — Optimized Bin Packing Using Adaptive Item Ordering
+- **Language:** Python 3.8
+- **Platform:** Windows 10/11, PowerShell
+- **Core techniques:** GNN, ACO, classical heuristics, and Local Search
+- **Primary objective:** Minimize the number of bins while maintaining valid item assignments and respecting bin-capacity constraints.
