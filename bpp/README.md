@@ -62,8 +62,7 @@ Upgrade pip and install NumPy and the general-purpose dependencies:
 
 ```powershell
 python -m pip install --upgrade "pip<25.1"
-python -m pip install numpy==1.24.4
-python -m pip install scipy networkx matplotlib tqdm numba pandas
+python -m pip install numpy==1.24.4 torch==2.4.1 scipy==1.10.1 networkx==3.1 matplotlib==3.7.5 tqdm==4.66.5 numba==0.58.1 torch-geometric==2.6.1 pandas==2.0.3
 ```
 
 Install PyTorch using a release compatible with Python 3.8 and your machine. Then install a compatible PyTorch Geometric release.
