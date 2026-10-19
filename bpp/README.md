@@ -18,13 +18,13 @@ The project evaluates solution quality, unused capacity, runtime, solution valid
 - Windows 10 or Windows 11
 - Python 3.8
 - PowerShell
-- A compatible PyTorch and PyTorch Geometric installation
+- Compatible PyTorch and PyTorch Geometric installations
 - Pretrained checkpoint: `../pretrained/bpp/bpp120.pt`
 - Test dataset: `../data/bpp/testDataset-120.pt`
 
 Run commands from the `bpp` project directory unless otherwise specified.
 
-The checkpoint and dataset paths are relative to the project directory. The checkpoint must be available before running experiments that require the pretrained model.
+The checkpoint and dataset paths are relative to the project directory. The checkpoint must exist before running experiments that require the pretrained model.
 
 ## Installation
 
@@ -56,23 +56,21 @@ Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass
 
 This policy change applies only to the current PowerShell session.
 
-### 3. Install the dependencies
+### 3. Install dependencies
 
-Upgrade pip and install NumPy and the general-purpose dependencies:
+Upgrade pip and install the project dependencies:
 
 ```powershell
 python -m pip install --upgrade "pip<25.1"
 python -m pip install numpy==1.24.4 torch==2.4.1 scipy==1.10.1 networkx==3.1 matplotlib==3.7.5 tqdm==4.66.5 numba==0.58.1 torch-geometric==2.6.1 pandas==2.0.3
 ```
 
-Install PyTorch using a release compatible with Python 3.8 and your machine. Then install a compatible PyTorch Geometric release.
+Verify that the selected package versions support Python 3.8 and are compatible with your machine's CPU/GPU configuration.
 
-Do not assume that installing the latest available releases of PyTorch and PyTorch Geometric will work with Python 3.8. Check the official installation instructions and compatibility requirements:
+Official references:
 
 - PyTorch: https://pytorch.org/get-started/previous-versions/
 - PyTorch Geometric: https://pytorch-geometric.readthedocs.io/
-
-The correct versions depend on the Python version, operating system, PyTorch release, and CPU/GPU configuration.
 
 ### 4. Verify the installation
 
@@ -82,19 +80,19 @@ Check the Python version:
 python --version
 ```
 
-Check that the required packages can be imported:
+Check that the required packages import successfully:
 
 ```powershell
 python -c "import numpy, torch, scipy, networkx, matplotlib, tqdm, numba, torch_geometric, pandas; print('All dependencies imported successfully')"
 ```
 
-Check the installed PyTorch version and device availability:
+Check PyTorch and CUDA availability:
 
 ```powershell
 python -c "import torch; print('PyTorch:', torch.__version__); print('CUDA available:', torch.cuda.is_available())"
 ```
 
-A successful import check confirms that the listed packages are importable. It does not guarantee that every experiment will run successfully.
+Successful imports do not guarantee that every experiment will run successfully.
 
 ## How It Works
 
@@ -106,9 +104,9 @@ The project workflow consists of the following stages:
 4. Apply Local Search to attempt to reduce the number of bins.
 5. Validate item assignments and bin-capacity constraints.
 6. Run scalability experiments across multiple item counts.
-7. Analyze experiment results and generate CSV summaries and plots.
+7. Save experiment logs and results produced by the individual experiment scripts.
 
-The objective is to reduce the number of bins while maintaining valid item assignments and respecting bin-capacity constraints.
+The objective is to minimize the number of bins while maintaining valid item assignments and respecting bin-capacity constraints.
 
 ## Run the Project
 
@@ -120,13 +118,12 @@ From the `bpp` directory, execute:
 python .\run_project.py
 ```
 
-The master runner is intended to coordinate these stages:
+The master runner coordinates these experiment stages:
 
 1. Classical baselines — `test_classical.py`
 2. Original DeepACO baseline — `test.py`
 3. DeepACO with Local Search — `test_deepaco_local_search.py`
 4. Scalability experiments — `test_scalability.py`
-5. Final results analysis — `analyze_results.py`
 
 The default scalability configuration uses seven item counts:
 
@@ -134,13 +131,13 @@ The default scalability configuration uses seven item counts:
 
 With 20 instances per size, this corresponds to **140 scalability instances**.
 
-The runner is designed to record stage status and runtime, continue to subsequent stages after individual experiment failures, and attempt final analysis. The final summary is intended to report passed, failed, skipped, and interrupted stages.
+The runner records stage status and runtime, continues to subsequent stages after individual experiment failures, and prints a final execution summary. The summary reports passed, failed, and skipped stages.
 
-A full run can take considerable time. Experiment scripts may generate new timestamped output files under `logs/`.
+A full run can take considerable time. Individual experiment scripts may generate timestamped output files under `logs/`.
 
 ### Run scalability experiments only
 
-Run scalability experiments using the default configuration:
+Run scalability experiments with the default configuration:
 
 ```powershell
 python .\run_project.py --scalability-only
@@ -165,16 +162,6 @@ python .\run_project.py --scalability-only --seed 20261017
 ```
 
 These commands assume `run_project.py` accepts and forwards the specified arguments to `test_scalability.py`.
-
-### Analyze existing results only
-
-```powershell
-python .\run_project.py --analysis-only
-```
-
-This option is intended to run `analyze_results.py` without rerunning the experiment stages.
-
-The analysis script must be able to locate the existing result files and recognize their expected formats. If those files are missing, the analysis may fail or produce incomplete output.
 
 ### Skip selected stages
 
@@ -202,18 +189,17 @@ Skip scalability experiments:
 python .\run_project.py --skip-scalability
 ```
 
-Multiple skip options can be combined. These options assume that the corresponding arguments are implemented by the master runner.
+Multiple skip options can be combined if supported by the current runner.
 
 ### Run individual scripts
 
-You can execute individual stages directly:
+You can run each experiment separately:
 
 ```powershell
 python .\test_classical.py
 python .\test.py
 python .\test_deepaco_local_search.py
 python .\test_scalability.py
-python .\analyze_results.py
 ```
 
 Use individual scripts when debugging a particular experiment or when you do not need the complete workflow.
@@ -232,11 +218,10 @@ Use individual scripts when debugging a particular experiment or when you do not
 | `test_classical.py` | Classical heuristic comparison |
 | `test_deepaco_local_search.py` | DeepACO and Local Search comparison |
 | `test_scalability.py` | Scalability experiments |
-| `analyze_results.py` | Result analysis and visualization |
 | `train.ipynb` | Notebook for training or experimentation, depending on its implementation |
 | `logs/` | Experiment logs, CSV files, plots, and master-run logs |
 
-Keep the existing file structure unchanged unless a deliberate project refactor is required.
+Keep the existing file structure unchanged unless a deliberate refactor is required.
 
 ## Results and Evaluation
 
@@ -244,7 +229,7 @@ The completed experiment run evaluated five methods across seven item counts, us
 
 ### DeepACO vs. DeepACO + Local Search
 
-The recorded paired comparison reported the following results:
+The recorded paired comparison reported:
 
 | Metric | Result |
 |---|---:|
@@ -253,31 +238,15 @@ The recorded paired comparison reported the following results:
 | Worsened instances | 0 |
 | Total bins saved | 33 |
 
-These results describe the recorded experiment and its tested instances. They do not guarantee identical performance on different datasets, random seeds, problem sizes, or algorithm settings.
+These values describe the recorded experiment and its tested instances. They do not guarantee identical performance on different datasets, random seeds, problem sizes, or algorithm settings.
 
-Classical heuristics were substantially faster in the completed experiments. Solution quality and runtime should therefore be considered together when comparing the methods.
+Classical heuristics were substantially faster in the completed experiments. Solution quality and runtime should therefore be considered together when comparing methods.
 
-Retain the experiment CSV files and logs that support these reported values so the results can be reproduced and verified.
-
-### Analysis outputs
-
-The final analysis directory is:
-
-`logs/final_scalability_analysis/`
-
-The analysis workflow is intended to produce available CSV summaries and plots covering:
-
-- Average bins used
-- Average runtime
-- Average unused capacity
-- DeepACO versus Local Search
-- Per-instance Local Search improvements
-
-The exact output files depend on the implementation of `analyze_results.py` and the experiment results available when it runs.
+Preserve the experiment CSV files and logs that support these values so the results can be independently verified.
 
 ## Logging and Reproducibility
 
-The master runner is intended to create a timestamped log under:
+The master runner creates a timestamped log under:
 
 `logs/master_run_TIMESTAMP.log`
 
@@ -285,15 +254,15 @@ The log records workflow output, stage execution details, and the final executio
 
 For reproducible comparisons:
 
-- Record the problem sizes, instance count, random seed, and algorithm parameters.
+- Record problem sizes, instance counts, random seeds, and algorithm parameters.
 - Preserve experiment CSV files, logs, and relevant checkpoints.
 - Compare algorithms using the same test instances wherever possible.
 - Distinguish total runtime from average runtime per instance.
 - Validate solutions before comparing their bin counts.
 - Inspect existing outputs before rerunning experiments if previous results must be preserved.
-- Record dependency versions and the machine configuration used for the experiments.
+- Record dependency versions and the machine configuration used.
 
-A random seed improves reproducibility only when the scripts correctly apply it to all relevant random-number generators and other sources of nondeterminism.
+A random seed improves reproducibility only when the scripts correctly apply it to all relevant random-number generators and sources of nondeterminism.
 
 ## Data and Checkpoint Safety
 
@@ -304,37 +273,35 @@ The master runner expects the following files:
 
 The pretrained checkpoint must already exist before running experiments that require the trained model. Generating a test dataset does not generate a pretrained checkpoint.
 
-### First-run dataset generation
+### Dataset generation behavior
 
 The intended behavior is:
 
 - **Dataset missing:** Run `utils.py` to generate the expected dataset.
 - **Dataset already exists:** Reuse the existing dataset without regenerating it.
 - **Dataset generation fails:** Stop before running experiments that require the missing dataset.
-- **Checkpoint missing:** Report the missing checkpoint; do not attempt to generate one automatically.
+- **Checkpoint missing:** Report the missing checkpoint without attempting to generate one automatically.
 
-This behavior must be implemented in `run_project.py`. The README does not implement dataset generation by itself.
+This behavior must be implemented in `run_project.py`.
 
-Before relying on automatic generation, inspect `utils.py` to confirm that it writes the dataset to the expected path and determine whether it can overwrite other files.
+Before relying on automatic generation, inspect `utils.py` to confirm that it writes the dataset to the expected path and determine whether it can overwrite existing files.
 
-If your current runner still uses opt-in generation, the following command may be supported by that version:
+If the current runner supports explicit dataset generation, use:
 
 ```powershell
 python .\run_project.py --generate-data
 ```
 
-Use this option only if it is implemented by the current runner, and inspect `utils.py` first to understand its effects on existing data.
+Use this option only when it is implemented by your current runner.
 
 ## Validation
 
 A valid bin-packing solution must satisfy both conditions:
 
 1. Every input item is assigned to exactly one bin.
-2. The total item demand in every bin is no greater than the bin capacity.
+2. The total item demand in every bin does not exceed the bin capacity.
 
-Performance comparisons should use validated solutions so that a lower bin count is not accepted at the expense of correctness.
-
-For reliable evaluation, validate the solutions produced by every compared algorithm, not only the proposed DeepACO method.
+Validate solutions produced by every compared algorithm, not only DeepACO. This ensures that a lower bin count is not accepted at the expense of correctness.
 
 ## Troubleshooting
 
@@ -346,7 +313,7 @@ Activate the virtual environment:
 .\.venv-deepaco\Scripts\Activate.ps1
 ```
 
-Install any missing packages into that environment and repeat the import checks.
+Install missing packages into that environment and repeat the import checks.
 
 ### PyTorch or PyTorch Geometric installation fails
 
@@ -361,15 +328,9 @@ Verify the paths relative to the `bpp` directory:
 
 If the dataset is missing, verify the dataset-generation logic and its output path. If the checkpoint is missing, restore the correct pretrained checkpoint.
 
-### A test stage fails
+### An experiment stage fails
 
 Review the error details in the terminal and the timestamped master log under `logs/`. Check the individual script's inputs, dependencies, and command-line arguments.
-
-The master runner can continue after a stage failure only if its implementation explicitly supports that behavior.
-
-### No new analysis plots appear
-
-Confirm that the experiment scripts completed successfully, that the expected CSV files exist, and that `analyze_results.py` can locate and process them.
 
 ### Scalability takes too long
 
