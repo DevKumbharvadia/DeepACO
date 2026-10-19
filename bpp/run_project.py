@@ -79,7 +79,7 @@ TEST_STAGES = [
     ("Scalability experiments", "test_scalability.py"),
 ]
 
-ANALYSIS_STAGE = ("Final results analysis", "analyze_results.py")
+ANALYSIS_STAGE = ("Final results analysis")
 
 SKIP_OPTIONS = {
     "test_classical.py": "skip_classical",
@@ -378,14 +378,8 @@ def check_project_files(args):
 
     required_scripts = [
         ROOT / "utils.py",
-        ROOT / "analyze_results.py",
     ]
-
-    if args.analysis_only:
-        # Only the analysis script and dependencies are needed here.
-        required_scripts = [ROOT / "analyze_results.py"]
-
-    elif args.scalability_only:
+    if args.scalability_only:
         required_scripts.extend([
             ROOT / "test_scalability.py",
         ])
@@ -641,12 +635,6 @@ def main():
             "Explicitly run utils.py, even if the dataset exists. "
             "Inspect utils.py first because it may overwrite data."
         ),
-    )
-
-    parser.add_argument(
-        "--analysis-only",
-        action="store_true",
-        help="Run only analyze_results.py.",
     )
 
     parser.add_argument(
